@@ -6,414 +6,7 @@
   <title>WHOlog — Adivina Quién</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ── Tokens de tema ── */
-    :root {
-      --accent: #e63946;
-      --accent2: #f4a261;
-      --bg: #0d0d0f;
-      --bg2: #131316;
-      --bg3: #1a1a20;
-      --border: #2a2a35;
-      --text: #e8e8f0;
-      --text-muted: #6b6b80;
-      --green: #2ecc71;
-      --green-dim: #1a3d2b;
-      --red: #e63946;
-      --red-dim: #3d1a1e;
-      --yellow: #f4a261;
-      --yellow-dim: #3d2a10;
-      --terminal-bg: #090909;
-      --terminal-prompt: #e63946;
-      --terminal-cmd: #f4a261;
-      --terminal-key: #7ec8e3;
-      --terminal-val: #2ecc71;
-      --terminal-comment: #555568;
-      --radius: 8px;
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-sans: 'Inter', sans-serif;
-    }
-
-    [data-theme="light"] {
-      --bg: #f0f0f4;
-      --bg2: #ffffff;
-      --bg3: #e8e8ee;
-      --border: #d0d0dc;
-      --text: #1a1a2e;
-      --text-muted: #7070a0;
-      --green-dim: #d4f5e2;
-      --red-dim: #fde8ea;
-      --yellow-dim: #fff3e0;
-      --terminal-bg: #1a1a2e;
-      --terminal-comment: #888899;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--font-sans);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      font-size: 14px;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    /* ── Header ── */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .logo-text {
-      font-family: var(--font-mono);
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .logo-text .accent { color: var(--accent); }
-    .logo-text .accent2 { color: var(--accent2); }
-
-    .logo-sub {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .badge {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-    }
-
-    /* Toggle tema */
-    .theme-toggle {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      cursor: pointer;
-      padding: 0.35rem 0.6rem;
-      color: var(--text);
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      transition: border-color 0.2s;
-    }
-    .theme-toggle:hover { border-color: var(--accent); }
-
-    /* ── Layout principal ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      grid-template-rows: auto 1fr;
-      gap: 0;
-      height: calc(100vh - 53px);
-    }
-
-    /* Panel izquierdo (juego) */
-    .panel-game {
-      overflow-y: auto;
-      padding: 1.25rem;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* Panel derecho (terminal) */
-    .panel-terminal {
-      background: var(--terminal-bg);
-      display: flex;
-      flex-direction: column;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      overflow: hidden;
-    }
-
-    .terminal-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid #1e1e28;
-      background: #0f0f14;
-      flex-shrink: 0;
-    }
-
-    .terminal-dots { display: flex; gap: 6px; }
-    .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .dot-red { background: #ff5f56; }
-    .dot-yellow { background: #ffbd2e; }
-    .dot-green { background: #27c93f; }
-
-    .terminal-title {
-      font-size: 0.7rem;
-      color: #555568;
-      margin-left: 0.25rem;
-      letter-spacing: 1px;
-    }
-
-    .terminal-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      line-height: 1.7;
-    }
-
-    .terminal-body::-webkit-scrollbar { width: 4px; }
-    .terminal-body::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
-
-    /* Líneas de terminal */
-    .tline { display: block; white-space: pre-wrap; word-break: break-all; }
-    .tline-prompt { color: var(--terminal-prompt); }
-    .tline-cmd    { color: var(--terminal-cmd); }
-    .tline-key    { color: var(--terminal-key); }
-    .tline-val    { color: var(--terminal-val); }
-    .tline-muted  { color: var(--terminal-comment); }
-    .tline-out    { color: #c0c0d0; }
-    .tline-error  { color: var(--red); }
-    .tline-sep    { color: #1e1e28; }
-
-    .cursor {
-      display: inline-block;
-      width: 8px; height: 1em;
-      background: var(--accent);
-      margin-left: 2px;
-      vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    /* ── Secciones del juego ── */
-    .card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 0.75rem;
-    }
-
-    .card-title {
-      font-size: 0.7rem;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--text-muted);
-    }
-
-    /* Mejor pregunta */
-    .hint-card {
-      background: var(--bg2);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hint-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(230,57,70,0.06) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    .hint-label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--accent);
-      margin-bottom: 0.4rem;
-    }
-
-    .hint-text {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .hint-text .kw { color: var(--accent2); font-family: var(--font-mono); }
-    .hint-text .val { color: var(--accent); font-family: var(--font-mono); }
-
-    .hint-score {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 0.3rem;
-    }
-
-    /* Filtros */
-    .filtro-grupo { margin-bottom: 0.85rem; }
-
-    .filtro-label {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 0.35rem;
-      display: block;
-    }
-
-    .opciones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-
-    .opt-btn {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.25rem 0.65rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: var(--bg3);
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-    }
-
-    .opt-btn:hover { border-color: var(--accent2); color: var(--text); }
-
-    .opt-btn.activo {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: rgba(230, 57, 70, 0.1);
-    }
-
-    /* Stats bar */
-    .stats-bar {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-    }
-
-    .stat-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-    }
-    .stat-dot.green { background: var(--green); }
-    .stat-dot.red   { background: var(--red); }
-
-    .stat-num { font-weight: 700; font-size: 1rem; }
-
-    /* Personajes grid */
-    .chars-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-
-    .char-tag {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: 4px;
-      border: 1px solid;
-      transition: opacity 0.2s;
-    }
-
-    .char-tag.activo {
-      background: var(--green-dim);
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .char-tag.descartado {
-      background: var(--red-dim);
-      border-color: var(--red);
-      color: var(--red);
-      text-decoration: line-through;
-      opacity: 0.6;
-    }
-
-    /* Reset btn */
-    .reset-btn {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 0.3rem 0.8rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .reset-btn:hover { border-color: var(--red); color: var(--red); }
-
-    /* Error */
-    #error-msg {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--red);
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--red);
-      border-radius: 4px;
-      background: var(--red-dim);
-      display: none;
-    }
-    #error-msg.visible { display: block; }
-
-    /* Spinner inline */
-    .spinner {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Scrollbar general */
-    .panel-game::-webkit-scrollbar { width: 4px; }
-    .panel-game::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-    /* Responsive */
-    @media (max-width: 700px) {
-      .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-      .panel-terminal { height: 260px; border-top: 1px solid var(--border); border-right: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -439,14 +32,21 @@
 
     <div id="error-msg"></div>
 
-    <!-- Hint -->
-    <div class="hint-card" id="hint-card">
-      <div class="hint-label">▶ mejor consulta prolog</div>
-      <div class="hint-text" id="hint-text">Cargando...</div>
-      <div class="hint-score" id="hint-score"></div>
+    <!-- Pregunta principal -->
+    <div class="question-card" id="question-card">
+      <div class="q-label">
+        <span class="q-label-text" id="q-label-text">▶ prolog sugiere preguntar</span>
+        <span id="spinner" class="spinner" style="display:none"></span>
+      </div>
+      <div class="q-text" id="q-text">Cargando...</div>
+      <div class="q-score" id="q-score"></div>
+      <div class="answer-btns" id="answer-btns">
+        <button class="answer-btn no" id="btn-no" disabled>NO</button>
+        <button class="answer-btn si" id="btn-si" disabled>SÍ</button>
+      </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats + reset -->
     <div class="stats-bar">
       <div class="stat-item">
         <span class="stat-dot green"></span>
@@ -458,16 +58,13 @@
         <span class="stat-num" id="cnt-descartados">—</span>
         <span style="color:var(--text-muted)">descartados</span>
       </div>
-      <span id="spinner" class="spinner" style="display:none"></span>
+      <button class="reset-btn" id="resetBtn">↺ reset</button>
     </div>
 
-    <!-- Filtros -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">// filtros</span>
-        <button class="reset-btn" id="resetBtn">↺ reset</button>
-      </div>
-      <div id="filtros-container">Cargando atributos...</div>
+    <!-- Historial de respuestas -->
+    <div class="history-bar" id="history-bar" style="display:none">
+      <span class="history-label">// historial</span>
+      <div class="history-list" id="history-list"></div>
     </div>
 
     <!-- Personajes activos -->
@@ -509,93 +106,101 @@
 </div>
 
 <script>
-const API = 'http://localhost:3001';
-let atributosDisponibles = [];
-let restricciones = {};
+const API = 'http://10.28.58.33:3001';
+let historial  = []; // [{atributo, valor, positivo}]
+let mejorPregunta = null;
 let queryCount = 0;
 
+const POS_MAP = {
+  universo: 2, mascara: 3, capa: 4, armas: 5,
+  vuela: 6, humano: 7, genero: 8, equipo: 9,
+  poder: 10, habitat: 11,
+};
+
+const ATTR_LABEL = {
+  universo: 'universo', mascara: 'máscara', capa: 'capa',
+  armas: 'armas', vuela: 'vuela', humano: 'es humano',
+  genero: 'género', equipo: 'equipo', poder: 'tipo de poder', habitat: 'hábitat',
+};
+
+const VAL_LABEL = {
+  dc: 'DC', marvel: 'Marvel',
+  masc: 'masculino', fem: 'femenino',
+  vengadores: 'Vengadores', liga_justicia: 'Liga de la Justicia',
+  x_men: 'X-Men', j_titanes: 'Jóvenes Titanes',
+  escuadron_s: 'Escuadrón Suicida', independiente: 'Independiente',
+  fisico: 'físico', tecnologico: 'tecnológico', cosmico: 'cósmico',
+  elemental: 'elemental', magico: 'mágico',
+  urbano: 'urbano', espacio: 'espacio', oceano: 'océano', dimension: 'dimensión',
+  true: 'sí', false: 'no',
+};
+
 // ── Tema ──────────────────────────────────────────────────
-const themeBtn = document.getElementById('themeBtn');
-const themeIcon = document.getElementById('themeIcon');
-const themeLabel = document.getElementById('themeLabel');
-
-function setTheme(dark) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  themeIcon.textContent = dark ? '☀' : '☾';
-  themeLabel.textContent = dark ? 'Claro' : 'Oscuro';
-}
-
-themeBtn.addEventListener('click', () => {
+document.getElementById('themeBtn').addEventListener('click', () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  setTheme(!isDark);
+  const next = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('themeIcon').textContent = isDark ? '☾' : '☀';
+  document.getElementById('themeLabel').textContent = isDark ? 'Oscuro' : 'Claro';
 });
 
-// ── Terminal logger ───────────────────────────────────────
+// ── Terminal ──────────────────────────────────────────────
 const termBody = document.getElementById('terminal-body');
 
-function termLine(content, cls = 'tline-out') {
-  const span = document.createElement('span');
-  span.className = `tline ${cls}`;
-  span.innerHTML = content;
-  termBody.appendChild(span);
+function termLine(html, cls = 'tline-out') {
+  const s = document.createElement('span');
+  s.className = `tline ${cls}`;
+  s.innerHTML = html;
+  termBody.appendChild(s);
   termBody.scrollTop = termBody.scrollHeight;
 }
 
-function termSep() {
-  termLine('────────────────────────────────', 'tline-sep');
-}
+function termSep() { termLine('────────────────────────────────', 'tline-sep'); }
 
-function termQuery(goal, restricciones) {
+function termQuery(rest) {
   queryCount++;
   termSep();
   termLine(`<span class="tline-muted">% query #${queryCount} · ${new Date().toLocaleTimeString()}</span>`);
-  termLine(`<span class="tline-prompt">?- </span><span class="tline-cmd">${escHtml(goal)}</span>`);
-
-  if (restricciones && restricciones.length > 0) {
-    termLine(`<span class="tline-muted">%  restricciones activas:</span>`);
-    restricciones.forEach(r => {
-      termLine(`<span class="tline-muted">%    </span><span class="tline-key">${r.atributo}</span><span class="tline-muted"> = </span><span class="tline-val">${r.valor}</span>`);
+  const prologList = buildPrologStr(rest);
+  termLine(`<span class="tline-prompt">?- </span><span class="tline-cmd">estado_json(${escHtml(prologList)}).</span>`);
+  if (rest.length > 0) {
+    termLine(`<span class="tline-muted">%  restricciones:</span>`);
+    rest.forEach(r => {
+      const fn = r.positivo === false ? 'not_attr' : 'attr';
+      termLine(`<span class="tline-muted">%    </span><span class="tline-key">${fn}(${POS_MAP[r.atributo]},${r.valor})</span>`);
     });
-  } else {
-    termLine(`<span class="tline-muted">%  sin restricciones (estado inicial)</span>`);
   }
 }
 
 function termResult(estado) {
   const mp = estado.mejor_pregunta;
-  termLine(`<span class="tline-muted">%  resultado:</span>`);
-  termLine(`<span class="tline-key">  total_activos</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_activos}</span>`);
-  termLine(`<span class="tline-key">  total_descartados</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_descartados}</span>`);
-
+  termLine(`<span class="tline-key">  activos</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_activos}</span>`);
+  termLine(`<span class="tline-key">  descartados</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_descartados}</span>`);
   if (mp && mp.atributo !== 'null') {
-    termLine(`<span class="tline-key">  mejor_pregunta</span>`);
-    termLine(`<span class="tline-muted">    atributo = </span><span class="tline-val">${mp.atributo}</span>`);
-    termLine(`<span class="tline-muted">    valor    = </span><span class="tline-val">${mp.valor}</span>`);
-    termLine(`<span class="tline-muted">    puntaje  = </span><span class="tline-val">${parseFloat(mp.puntaje).toFixed(2)}</span>`);
-  } else {
-    termLine(`<span class="tline-muted">    mejor_pregunta = </span><span class="tline-val">null</span>`);
+    termLine(`<span class="tline-key">  mejor_pregunta</span><span class="tline-muted"> = </span><span class="tline-val">${mp.atributo}/${mp.valor}</span><span class="tline-muted"> (${parseFloat(mp.puntaje).toFixed(2)})</span>`);
   }
   termLine(`<span class="tline-prompt">true.</span>`);
 }
 
-function termError(msg) {
-  termLine(`<span class="tline-error">ERROR: ${escHtml(msg)}</span>`);
+function termAnswer(atributo, valor, positivo) {
+  const op = positivo ? '=' : '≠';
+  const sign = positivo ? '✓' : '✗';
+  termLine(`<span class="tline-muted">% respuesta: ${sign} </span><span class="tline-key">${atributo}</span><span class="tline-muted"> ${op} </span><span class="tline-val">${valor}</span>`);
 }
 
 function escHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildPrologStr(rest) {
+  const terms = rest.map(r => {
+    const fn = r.positivo === false ? 'not_attr' : 'attr';
+    return `${fn}(${POS_MAP[r.atributo]},${r.valor})`;
+  });
+  return `[${terms.join(',')}]`;
 }
 
 // ── API ───────────────────────────────────────────────────
-async function fetchAtributos() {
-  const r = await fetch(`${API}/atributos`);
-  const d = await r.json();
-  return d.atributos;
-}
-
 async function fetchEstado(rest) {
   const r = await fetch(`${API}/estado`, {
     method: 'POST',
@@ -605,103 +210,102 @@ async function fetchEstado(rest) {
   return r.json();
 }
 
-function getRestriccionesArray() {
-  return Object.entries(restricciones)
-    .filter(([, v]) => v)
-    .map(([key]) => {
-      const idx = key.indexOf(':');
-      return { atributo: key.slice(0, idx), valor: key.slice(idx + 1) };
-    });
-}
-
-// ── Render filtros ────────────────────────────────────────
-function renderFiltros() {
-  const container = document.getElementById('filtros-container');
-  container.innerHTML = '';
-  atributosDisponibles.forEach(({ nombre, opciones }) => {
-    const grupo = document.createElement('div');
-    grupo.className = 'filtro-grupo';
-    const lbl = document.createElement('span');
-    lbl.className = 'filtro-label';
-    lbl.textContent = nombre.replace(/_/g, ' ');
-    grupo.appendChild(lbl);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'opciones';
-    opciones.forEach(op => {
-      const key = `${nombre}:${op}`;
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn' + (restricciones[key] ? ' activo' : '');
-      btn.textContent = op === 'true' ? 'sí' : op === 'false' ? 'no' : op.replace(/_/g, ' ');
-      btn.dataset.key = key;
-      btn.addEventListener('click', () => toggleFiltro(nombre, op, opciones, btn));
-      wrap.appendChild(btn);
-    });
-    grupo.appendChild(wrap);
-    container.appendChild(grupo);
-  });
-}
-
-function toggleFiltro(attr, val, todas, btn) {
-  const key = `${attr}:${val}`;
-  if (restricciones[key]) {
-    delete restricciones[key];
-    btn.classList.remove('activo');
-  } else {
-    todas.forEach(o => delete restricciones[`${attr}:${o}`]);
-    restricciones[key] = true;
-    document.querySelectorAll(`[data-key^="${attr}:"]`).forEach(b => b.classList.remove('activo'));
-    btn.classList.add('activo');
-  }
+// ── Responder ─────────────────────────────────────────────
+function responder(positivo) {
+  if (!mejorPregunta || mejorPregunta.atributo === 'null') return;
+  termAnswer(mejorPregunta.atributo, mejorPregunta.valor, positivo);
+  historial.push({ atributo: mejorPregunta.atributo, valor: mejorPregunta.valor, positivo });
+  renderHistorial();
   actualizarEstado();
+}
+
+document.getElementById('btn-si').addEventListener('click', () => responder(true));
+document.getElementById('btn-no').addEventListener('click', () => responder(false));
+
+// ── Historial ─────────────────────────────────────────────
+function renderHistorial() {
+  const bar = document.getElementById('history-bar');
+  const list = document.getElementById('history-list');
+  if (historial.length === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  list.innerHTML = historial.map(h => {
+    const cls = h.positivo ? 'si' : 'no';
+    const sign = h.positivo ? '✓' : '✗';
+    const op = h.positivo ? '=' : '≠';
+    const aLbl = ATTR_LABEL[h.atributo] || h.atributo;
+    const vLbl = VAL_LABEL[h.valor] || h.valor;
+    return `<span class="history-item ${cls}">${sign} ${aLbl} ${op} ${vLbl}</span>`;
+  }).join('');
 }
 
 // ── Actualizar estado ─────────────────────────────────────
 async function actualizarEstado() {
-  const spinner = document.getElementById('spinner');
-  const errorMsg = document.getElementById('error-msg');
+  const spinner   = document.getElementById('spinner');
+  const errorMsg  = document.getElementById('error-msg');
+  const btnSi     = document.getElementById('btn-si');
+  const btnNo     = document.getElementById('btn-no');
+  const answerBtns = document.getElementById('answer-btns');
+  const qLabelText = document.getElementById('q-label-text');
+
   spinner.style.display = 'inline-block';
+  btnSi.disabled = true;
+  btnNo.disabled = true;
   errorMsg.classList.remove('visible');
 
-  const rest = getRestriccionesArray();
-
-  // Log en terminal
-  termQuery('estado_json(Restricciones)', rest);
+  const rest = historial.map(h => ({ atributo: h.atributo, valor: h.valor, positivo: h.positivo }));
+  termQuery(rest);
 
   try {
     const estado = await fetchEstado(rest);
-
     if (estado.error) throw new Error(estado.error);
 
-    // Terminal resultado
     termResult(estado);
-
-    // Personajes
     renderPersonajes(estado.activos || [], estado.descartados || []);
-
-    // Contadores
-    document.getElementById('cnt-activos').textContent = estado.total_activos ?? 0;
+    document.getElementById('cnt-activos').textContent    = estado.total_activos ?? 0;
     document.getElementById('cnt-descartados').textContent = estado.total_descartados ?? 0;
 
-    // Hint
-    const mp = estado.mejor_pregunta;
-    const hintText = document.getElementById('hint-text');
-    const hintScore = document.getElementById('hint-score');
-    if (mp && mp.atributo !== 'null') {
-      const valDisplay = mp.valor === 'true' ? 'sí' : mp.valor === 'false' ? 'no' : mp.valor.replace(/_/g, ' ');
-      hintText.innerHTML = `¿<span class="kw">${mp.atributo.replace(/_/g, ' ')}</span> = <span class="val">${valDisplay}</span>?`;
-      hintScore.textContent = `puntaje: ${parseFloat(mp.puntaje).toFixed(2)} | descarta más personajes`;
+    const mp      = estado.mejor_pregunta;
+    const qText   = document.getElementById('q-text');
+    const qScore  = document.getElementById('q-score');
+
+    if (estado.total_activos === 1) {
+      qLabelText.textContent = '⚡ resultado';
+      qText.innerHTML = `<span class="q-found">Es <span class="q-name">${estado.activos[0]}</span></span>`;
+      qScore.textContent = `identificado en ${historial.length} pregunta${historial.length !== 1 ? 's' : ''}`;
+      answerBtns.style.display = 'none';
+      mejorPregunta = null;
+
+    } else if (estado.total_activos === 0) {
+      qLabelText.textContent = '✕ sin coincidencias';
+      qText.innerHTML = `<span class="q-found q-error">Ningún personaje coincide</span>`;
+      qScore.textContent = 'Revisa las respuestas o reinicia.';
+      answerBtns.style.display = 'none';
+      mejorPregunta = null;
+
+    } else if (!mp || mp.atributo === 'null') {
+      qLabelText.textContent = '? candidatos finales';
+      qText.innerHTML = `<span class="q-found">Quedan ${estado.total_activos} posibles</span>`;
+      qScore.textContent = 'No hay más preguntas discriminantes.';
+      answerBtns.style.display = 'none';
+      mejorPregunta = null;
+
     } else {
-      hintText.textContent = 'No quedan preguntas útiles.';
-      hintScore.textContent = '';
+      mejorPregunta = mp;
+      const aLbl = ATTR_LABEL[mp.atributo] || mp.atributo;
+      const vLbl = VAL_LABEL[mp.valor]     || mp.valor;
+      qLabelText.textContent = '▶ prolog sugiere preguntar';
+      qText.innerHTML = `<span class="q-mono">¿</span><span class="q-attr">${aLbl}</span><span class="q-mono"> = </span><span class="q-val">${vLbl}</span><span class="q-mono"> ?</span>`;
+      qScore.textContent = `puntaje: ${parseFloat(mp.puntaje).toFixed(2)} · elimina ~${Math.floor(estado.total_activos / 2)} personajes`;
+      answerBtns.style.display = 'flex';
+      btnSi.disabled = false;
+      btnNo.disabled = false;
     }
 
-    // Badge online
     document.getElementById('status-badge').textContent = '⬤ online';
     document.getElementById('status-badge').style.color = 'var(--green)';
 
   } catch (e) {
-    termError(e.message);
+    termLine(`<span class="tline-error">ERROR: ${escHtml(e.message)}</span>`);
     errorMsg.textContent = `API error: ${e.message} — ¿Está corriendo node server.js?`;
     errorMsg.classList.add('visible');
     document.getElementById('status-badge').textContent = '⬤ offline';
@@ -721,8 +325,10 @@ function renderPersonajes(activos, descartados) {
 
 // ── Reset ─────────────────────────────────────────────────
 document.getElementById('resetBtn').addEventListener('click', () => {
-  restricciones = {};
-  renderFiltros();
+  historial = [];
+  mejorPregunta = null;
+  renderHistorial();
+  document.getElementById('answer-btns').style.display = 'flex';
   termLine(`<span class="tline-muted">% ↺ sesión reiniciada</span>`);
   actualizarEstado();
 });
@@ -732,13 +338,13 @@ async function init() {
   const errorMsg = document.getElementById('error-msg');
   try {
     termLine(`<span class="tline-prompt">?- </span><span class="tline-cmd">use_module(library(lists)), consult('base.pl').</span>`);
-    atributosDisponibles = await fetchAtributos();
+    const r = await fetch(`${API}/atributos`);
+    const d = await r.json();
     termLine(`<span class="tline-val">true.</span>`);
-    termLine(`<span class="tline-muted">% atributos cargados: ${atributosDisponibles.map(a => a.nombre).join(', ')}</span>`);
-    renderFiltros();
+    termLine(`<span class="tline-muted">% atributos: ${d.atributos.map(a => a.nombre).join(', ')}</span>`);
     await actualizarEstado();
   } catch (e) {
-    termError(e.message);
+    termLine(`<span class="tline-error">ERROR: ${escHtml(e.message)}</span>`);
     errorMsg.textContent = `No se pudo conectar con la API — ejecuta: node server.js`;
     errorMsg.classList.add('visible');
   }

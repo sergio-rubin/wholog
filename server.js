@@ -49,11 +49,8 @@ function buildPrologRestrictions(restricciones) {
   const terminos = (restricciones || []).map(r => {
     const pos = posMap[r.atributo];
     if (!pos) return null;
-    // Valores booleanos deben ir sin comillas en Prolog
-    const val = (r.valor === 'true' || r.valor === 'false')
-      ? r.valor
-      : r.valor;
-    return `attr(${pos},${val})`;
+    const functor = r.positivo === false ? 'not_attr' : 'attr';
+    return `${functor}(${pos},${r.valor})`;
   }).filter(Boolean);
 
   return `[${terminos.join(',')}]`;
@@ -103,7 +100,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const parsed = new URL(req.url, `http://localhost:${PORT}`);
+  const parsed = new URL(req.url, `http://0.0.0.0:${PORT}`);
   const pathname = parsed.pathname;
 
   // ---- GET /personajes ----
@@ -187,7 +184,7 @@ function parsePrologAtributos(raw) {
 }
 
 server.listen(PORT, () => {
-  console.log(`WHOlog API escuchando en http://localhost:${PORT}`);
+  console.log(`WHOlog API escuchando en http://0.0.0.0:${PORT}`);
   console.log('Endpoints:');
   console.log('  GET  /personajes  - Lista todos los personajes');
   console.log('  GET  /atributos   - Lista atributos disponibles');

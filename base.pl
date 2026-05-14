@@ -74,6 +74,10 @@ personaje_cumple(_, []).
 personaje_cumple(Nombre, [attr(Pos, Valor)|Resto]) :-
     valor_atributo(Nombre, Pos, Valor),
     personaje_cumple(Nombre, Resto).
+personaje_cumple(Nombre, [not_attr(Pos, Valor)|Resto]) :-
+    valor_atributo(Nombre, Pos, V),
+    V \= Valor,
+    personaje_cumple(Nombre, Resto).
 
 personajes_activos(Restricciones, Lista) :-
     findall(N,
@@ -104,18 +108,32 @@ puntaje_pregunta(Atributo, Valor, Activos, Puntaje) :-
 tiene_valor(Pos, Valor, Nombre) :-
     valor_atributo(Nombre, Pos, Valor).
 
+% Pos está determinada si ya tiene un attr positivo O si solo queda
+% una opción posible (todas las demás tienen not_attr).
+pos_determinada(Pos, Restricciones) :-
+    member(attr(Pos, _), Restricciones).
+pos_determinada(Pos, Restricciones) :-
+    atributo(_, Pos, _, Opciones),
+    length(Opciones, Total),
+    findall(V, member(not_attr(Pos, V), Restricciones), Negados),
+    length(Negados, NNeg),
+    Restantes is Total - NNeg,
+    Restantes =< 1.
+
 % Genera pares (Puntaje, atributo(Atributo,Valor)) para todos los
-% atributos y opciones, dado el conjunto de activos actual.
-todas_preguntas_puntuadas(Activos, Pares) :-
+% atributos y opciones NO determinados, dado el conjunto de activos actual.
+todas_preguntas_puntuadas(Activos, Restricciones, Pares) :-
     findall(P-attr(At, Val),
-        (atributo(At, _Pos, _, Opciones),
+        (atributo(At, Pos, _, Opciones),
+         \+ pos_determinada(Pos, Restricciones),
          member(Val, Opciones),
+         \+ member(not_attr(Pos, Val), Restricciones),
          puntaje_pregunta(At, Val, Activos, P),
          P > 0),
         Pares).
 
-mejor_pregunta(Activos, MejorAtributo, MejorValor, MejorPuntaje) :-
-    todas_preguntas_puntuadas(Activos, Pares),
+mejor_pregunta(Activos, Restricciones, MejorAtributo, MejorValor, MejorPuntaje) :-
+    todas_preguntas_puntuadas(Activos, Restricciones, Pares),
     Pares \= [],
     max_member(MejorPuntaje-attr(MejorAtributo, MejorValor), Pares).
 
@@ -124,7 +142,7 @@ mejor_pregunta(Activos, MejorAtributo, MejorValor, MejorPuntaje) :-
 % ============================================================
 listar_puntajes(Restricciones) :-
     personajes_activos(Restricciones, Activos),
-    todas_preguntas_puntuadas(Activos, Pares),
+    todas_preguntas_puntuadas(Activos, Restricciones, Pares),
     msort(Pares, Ordenados),
     reverse(Ordenados, Desc),
     maplist(print_par, Desc).
@@ -142,7 +160,7 @@ print_par(P-attr(At, Val)) :-
 estado_json(Restricciones) :-
     personajes_activos(Restricciones, Activos),
     personajes_descartados(Restricciones, Descartados),
-    (   mejor_pregunta(Activos, MejAt, MejVal, MejPunt)
+    (   mejor_pregunta(Activos, Restricciones, MejAt, MejVal, MejPunt)
     ->  true
     ;   MejAt = null, MejVal = null, MejPunt = 0
     ),

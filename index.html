@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WHOlog - Adivina Quién</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 1rem; background: #f5f5f5; }
+    h1 { margin-bottom: 0.5rem; }
+    #app { max-width: 900px; margin: 0 auto; }
+    .seccion { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+    h2 { font-size: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
+    .atributo-grupo { margin-bottom: 0.75rem; }
+    .atributo-grupo label { font-weight: bold; display: block; margin-bottom: 0.25rem; }
+    .opciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .opciones button {
+      padding: 0.3rem 0.7rem; border: 1px solid #999; border-radius: 4px;
+      background: #fff; cursor: pointer; font-size: 0.85rem;
+    }
+    .opciones button.activo { background: #333; color: #fff; border-color: #333; }
+    .opciones button:hover:not(.activo) { background: #eee; }
+    .personajes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag {
+      padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.8rem;
+      border: 1px solid #ccc;
+    }
+    .tag.activo { background: #d4edda; border-color: #28a745; color: #155724; }
+    .tag.descartado { background: #f8d7da; border-color: #dc3545; color: #721c24; text-decoration: line-through; opacity: 0.7; }
+    .mejor-pregunta { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; }
+    .mejor-pregunta h2 { border-bottom-color: #ffc107; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+    .stat { font-size: 0.9rem; }
+    .stat span { font-weight: bold; }
+    button#resetBtn { padding: 0.4rem 1rem; background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    button#resetBtn:hover { background: #b02a37; }
+    #loading { font-style: italic; color: #666; font-size: 0.85rem; margin-left: 0.5rem; }
+    #error { color: red; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>WHOlog 🦸</h1>
+  <p style="margin-bottom:1rem;color:#555">Filtra por atributos y descubre qué superhéroe pensé.</p>
+
+  <div id="error"></div>
+
+  <!-- Mejor pregunta sugerida -->
+  <div class="mejor-pregunta" id="seccion-mejor">
+    <h2>Mejor pregunta sugerida por Prolog <span id="loading"></span></h2>
+    <div id="mejor-contenido">Cargando...</div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="seccion">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <h2 style="border:none;padding:0;margin:0">Filtros activos</h2>
+      <button id="resetBtn">Reiniciar</button>
+    </div>
+    <div id="filtros-container">Cargando atributos...</div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats">
+    <div class="stat">Activos: <span id="cnt-activos">-</span></div>
+    <div class="stat">Descartados: <span id="cnt-descartados">-</span></div>
+  </div>
+
+  <!-- Personajes activos -->
+  <div class="seccion">
+    <h2>Personajes que siguen en juego</h2>
+    <div class="personajes-grid" id="lista-activos"></div>
+  </div>
+
+  <!-- Personajes descartados -->
+  <div class="seccion">
+    <h2>Personajes descartados</h2>
+    <div class="personajes-grid" id="lista-descartados"></div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3001';
+
+// Estado de la aplicación
+let atributosDisponibles = [];
+let restricciones = {}; // { "universo:dc": true, ... }
+
+// ----------------------------------------------------------
+// Fetch helpers
+// ----------------------------------------------------------
+async function fetchAtributos() {
+  const r = await fetch(`${API}/atributos`);
+  const d = await r.json();
+  return d.atributos;
+}
+
+async function fetchEstado(restriccionesArray) {
+  const r = await fetch(`${API}/estado`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ restricciones: restriccionesArray }),
+  });
+  return r.json();
+}
+
+// ----------------------------------------------------------
+// Construye la lista de restricciones activas
+// ----------------------------------------------------------
+function getRestriccionesArray() {
+  return Object.entries(restricciones)
+    .filter(([, activo]) => activo)
+    .map(([key]) => {
+      const [atributo, valor] = key.split(':');
+      return { atributo, valor };
+    });
+}
+
+// ----------------------------------------------------------
+// Renderiza los filtros
+// ----------------------------------------------------------
+function renderFiltros() {
+  const container = document.getElementById('filtros-container');
+  container.innerHTML = '';
+
+  atributosDisponibles.forEach(({ nombre, tipo, opciones }) => {
+    const grupo = document.createElement('div');
+    grupo.className = 'atributo-grupo';
+
+    const label = document.createElement('label');
+    label.textContent = capitalize(nombre);
+    grupo.appendChild(label);
+
+    const opcionesDiv = document.createElement('div');
+    opcionesDiv.className = 'opciones';
+
+    opciones.forEach(opcion => {
+      const key = `${nombre}:${opcion}`;
+      const btn = document.createElement('button');
+      btn.textContent = opcion === 'true' ? 'Sí' : opcion === 'false' ? 'No' : capitalize(opcion);
+      btn.dataset.key = key;
+      if (restricciones[key]) btn.classList.add('activo');
+
+      btn.addEventListener('click', () => toggleRestriccion(nombre, opcion, opciones, btn));
+      opcionesDiv.appendChild(btn);
+    });
+
+    grupo.appendChild(opcionesDiv);
+    container.appendChild(grupo);
+  });
+}
+
+// ----------------------------------------------------------
+// Toggle de una restricción
+// Para atributos enum, solo una opción activa a la vez por atributo.
+// Para booleanos, igual.
+// ----------------------------------------------------------
+function toggleRestriccion(atributo, valor, todasOpciones, btn) {
+  const key = `${atributo}:${valor}`;
+
+  if (restricciones[key]) {
+    // Desactivar
+    delete restricciones[key];
+    btn.classList.remove('activo');
+  } else {
+    // Desactivar las otras opciones del mismo atributo
+    todasOpciones.forEach(o => { delete restricciones[`${atributo}:${o}`]; });
+    // Activar esta
+    restricciones[key] = true;
+
+    // Actualizar clases visualmente
+    document.querySelectorAll(`[data-key^="${atributo}:"]`).forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+  }
+
+  actualizarEstado();
+}
+
+// ----------------------------------------------------------
+// Actualiza el estado desde la API
+// ----------------------------------------------------------
+async function actualizarEstado() {
+  const loading = document.getElementById('loading');
+  const errorDiv = document.getElementById('error');
+  loading.textContent = '(consultando Prolog...)';
+  errorDiv.textContent = '';
+
+  try {
+    const rest = getRestriccionesArray();
+    const estado = await fetchEstado(rest);
+
+    // Personajes
+    renderPersonajes(estado.activos || [], estado.descartados || []);
+
+    // Contadores
+    document.getElementById('cnt-activos').textContent = estado.total_activos ?? 0;
+    document.getElementById('cnt-descartados').textContent = estado.total_descartados ?? 0;
+
+    // Mejor pregunta
+    const mp = estado.mejor_pregunta;
+    const contenido = document.getElementById('mejor-contenido');
+    if (mp && mp.atributo !== 'null') {
+      const valorDisplay = mp.valor === 'true' ? 'Sí' : mp.valor === 'false' ? 'No' : capitalize(mp.valor);
+      contenido.innerHTML = `¿<strong>${capitalize(mp.atributo)}</strong> = <strong>${valorDisplay}</strong>? &nbsp;<small style="color:#666">(puntaje: ${parseFloat(mp.puntaje).toFixed(2)})</small>`;
+    } else {
+      contenido.textContent = 'No hay más preguntas útiles.';
+    }
+
+  } catch (e) {
+    document.getElementById('error').textContent = `Error al contactar la API: ${e.message}. ¿Está corriendo server.js?`;
+  } finally {
+    loading.textContent = '';
+  }
+}
+
+// ----------------------------------------------------------
+// Renderiza las listas de personajes
+// ----------------------------------------------------------
+function renderPersonajes(activos, descartados) {
+  const listaActivos = document.getElementById('lista-activos');
+  const listaDescartados = document.getElementById('lista-descartados');
+
+  listaActivos.innerHTML = activos.map(n =>
+    `<span class="tag activo">${n}</span>`
+  ).join('');
+
+  listaDescartados.innerHTML = descartados.map(n =>
+    `<span class="tag descartado">${n}</span>`
+  ).join('');
+}
+
+// ----------------------------------------------------------
+// Reset
+// ----------------------------------------------------------
+document.getElementById('resetBtn').addEventListener('click', () => {
+  restricciones = {};
+  renderFiltros();
+  actualizarEstado();
+});
+
+// ----------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------
+function capitalize(s) {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
+}
+
+// ----------------------------------------------------------
+// Init
+// ----------------------------------------------------------
+async function init() {
+  const errorDiv = document.getElementById('error');
+  try {
+    atributosDisponibles = await fetchAtributos();
+    renderFiltros();
+    await actualizarEstado();
+  } catch (e) {
+    errorDiv.textContent = `No se pudo conectar con la API (${e.message}). Asegúrate de correr: node server.js`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

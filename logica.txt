@@ -1,0 +1,78 @@
+Esquema de preguntas Propuesta: 
+Manejar menús generales y para cada menú las preguntas especificas Básicas: 
+¿Universo?  
+1. Dc? [Si, No] 
+2. Marvel? [Si, No] 
+
+Mascara? 
+[Si, No] 
+
+Capa? [Si, No] 
+
+Armas? [Si, No] 
+
+Vuela? [Si, No] 
+
+Humano? [Si, No] 
+
+Genero?
+1. Masc? [Si, No] 
+2. Fem? [Si, No] 
+
+Equipo?
+1. Escuadron_S? [Si, No] 
+2. Guardianes? [Si, No] 
+3. Independiente? [Si, No] 
+4. J_Titanes? [Si, No] 
+5. Liga_Justicia? [Si, No] 
+6. Vengadores? [Si, No] 
+7. X-Men? [Si, No] 
+
+Tipo de poder? 
+1. Cosmico? [Si, No] 
+2. Elemental? [Si, No] 
+3. Fisico? [Si, No] 
+4. Magico? [Si, No] 
+5. Psiquico? [Si, No] 
+6. Tecnologico? [Si, No] 
+
+Habitat?  
+1. Dimension? [Si, No] 
+2. Espacio? [Si, No] 
+3. Oceano? [Si, No] 
+4. Urbano? [Si, No] 
+
+
+Compuestas: 
+Extremadamente poderoso? [Superman, Thor, Scarlet Witch, Silver Surfer, Dr. Strange, Hulk, Green Lantern, Storm] 
+Podria destruir una ciudad? [Superman, Thor, Scarlet Witch, Silver Surfer, Hulk, Dr. Strange, Magneto, Storm] 
+Es alienígena (de otro mundo)? [Superman, Silver Surfer, Starfire, Thor] 
+Usa magia? [Dr. Strange, Scarlet Witch, Raven, Thor, Starfire] 
+Es villano? [The Joker, Magneto, Harley Quinn, Catwoman] 
+Es modificado genéticamente? [Captain America, Deadpool, Wolverine, Hulk, SpiderMan, Beast Boy] 
+Tiene película live action propia famosa? [Aquaman, Batman, Black Panther, Black Widow, Captain America, Deadpool, Dr. Strange, Green Lantern, Hulk, Iron Man, Spider-Man, Superman, The Flash, Thor, Wonder Woman, Wolverine] 
+
+Propuesta: 
+Permitirle al jugador poder mostrar la lista actual de personajes que él ha descartado. 
+
+Sistema de puntuación 
+Para poder hacer un ranking de las mejores preguntas propongo que se tomen en cuenta dos parámetros: 
+
+- Numero de posibles descartes para cada pregunta 
+Formula:  Descartes = Numero de personajes – Max(Personajes “Si”, Personajes “No) 
+Ejemplo:  Personajes disponibles para esa pregunta: 30 Personajes “Si” = 8 Personajes “No” = 22 Descartes = 30 – Max(8,22) = 30 – 22 = 8 
+
+- Calcular el “equilibrio” de cada pregunta 
+Calcula si al realizar la pregunta el numero de descartes en el peor caso es cercano al 50% del total de personajes, 
+esto daría una pregunta mas eficiente en caso de que los descartes sean pocos. 
+
+Si el resultado es cercano a 0, la pregunta es muy buena. 
+Formula: Equilibrio = |Personajes “Si” -  Personajes “No”| 
+Ejemplo: 
+Si = 15 No = 15 Equilibrio = 15 -15 = 0 (Excelente) 
+Si = 2 No = 26 Equilibrio = 26 -2 = 24 (Muy mala)
+
+Puntaje Final Puntaje = Descartes – 0.5 * Equilibrio 
+
+Sucesivamente con cada pregunta se ajustará su puntaje.  
+La pregunta con mayor puntaje será la seleccionada por la computadora para hacerle al jugador. 

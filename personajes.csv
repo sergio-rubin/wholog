@@ -1,0 +1,29 @@
+Nombre,Universo,Mascara,Capa,Armas,Vuela,Humano,Genero,Equipo,Tipo de poder,Habitat
+Spider-Man,marvel,true,false,false,false,true,Masc,Vengadores,Fisico,Urbano
+Batman,dc,true,true,true,false,true,Masc,Liga_Justicia,Tecnologico,Urbano
+Wonder Woman,dc,false,false,true,true,true,Fem,Liga_Justicia,Fisico,Urbano
+Iron Man,marvel,true,false,true,true,true,Masc,Vengadores,Tecnologico,Urbano
+Superman,dc,false,true,false,true,true,Masc,Liga_Justicia,Cosmico,Urbano
+Black Widow,marvel,false,false,true,false,true,Fem,Vengadores,Fisico,Urbano
+The Joker,dc,false,false,true,false,true,Masc,Independiente,Fisico,Urbano
+Hulk,marvel,false,false,false,false,false,Masc,Vengadores,Fisico,Urbano
+Captain America,marvel,true,false,true,false,true,Masc,Vengadores,Fisico,Urbano
+Harley Quinn,dc,false,false,true,false,true,Fem,Escuadron_S,Fisico,Urbano
+Thor,marvel,false,true,true,true,true,Masc,Vengadores,Elemental,Espacio
+The Flash,dc,true,false,false,false,true,Masc,Liga_Justicia,Fisico,Urbano
+Black Panther,marvel,true,false,false,false,true,Masc,Vengadores,Fisico,Urbano
+Aquaman,dc,false,false,true,false,true,Masc,Liga_Justicia,Elemental,Oceano
+Storm,marvel,false,true,false,true,true,Fem,X-Men,Elemental,Urbano
+Green Lantern,dc,true,false,true,true,true,Masc,Liga_Justicia,Cosmico,Espacio
+Scarlet Witch,marvel,false,false,false,true,true,Fem,Vengadores,Magico,Dimension
+Wolverine,marvel,true,false,true,false,true,Masc,X-Men,Fisico,Urbano
+Cyborg,dc,false,false,true,true,false,Masc,Liga_Justicia,Tecnologico,Urbano
+Catwoman,dc,true,false,true,false,true,Fem,Independiente,Fisico,Urbano
+Deadpool,marvel,true,false,true,false,true,Masc,Independiente,Fisico,Urbano
+Raven,dc,false,true,false,true,true,Fem,J_Titanes,Magico,Dimension
+Daredevil,marvel,true,false,true,false,true,Masc,Vengadores,Fisico,Urbano
+Starfire,dc,false,false,false,true,false,Fem,J_Titanes,Cosmico,Espacio
+Magneto,marvel,true,true,false,true,true,Masc,X-Men,Elemental,Urbano
+Dr. Strange,marvel,false,true,true,true,true,Masc,Vengadores,Magico,Dimension
+Beast Boy,dc,false,false,false,false,false,Masc,J_Titanes,Fisico,Urbano
+Silver Surfer,marvel,false,false,false,true,false,Masc,Independiente,Cosmico,Espacio

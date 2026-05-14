@@ -1,193 +1,680 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WHOlog - Adivina Quién</title>
+  <title>WHOlog — Adivina Quién</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ── Tokens de tema ── */
+    :root {
+      --accent: #e63946;
+      --accent2: #f4a261;
+      --bg: #0d0d0f;
+      --bg2: #131316;
+      --bg3: #1a1a20;
+      --border: #2a2a35;
+      --text: #e8e8f0;
+      --text-muted: #6b6b80;
+      --green: #2ecc71;
+      --green-dim: #1a3d2b;
+      --red: #e63946;
+      --red-dim: #3d1a1e;
+      --yellow: #f4a261;
+      --yellow-dim: #3d2a10;
+      --terminal-bg: #090909;
+      --terminal-prompt: #e63946;
+      --terminal-cmd: #f4a261;
+      --terminal-key: #7ec8e3;
+      --terminal-val: #2ecc71;
+      --terminal-comment: #555568;
+      --radius: 8px;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f0f4;
+      --bg2: #ffffff;
+      --bg3: #e8e8ee;
+      --border: #d0d0dc;
+      --text: #1a1a2e;
+      --text-muted: #7070a0;
+      --green-dim: #d4f5e2;
+      --red-dim: #fde8ea;
+      --yellow-dim: #fff3e0;
+      --terminal-bg: #1a1a2e;
+      --terminal-comment: #888899;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; padding: 1rem; background: #f5f5f5; }
-    h1 { margin-bottom: 0.5rem; }
-    #app { max-width: 900px; margin: 0 auto; }
-    .seccion { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
-    h2 { font-size: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
-    .atributo-grupo { margin-bottom: 0.75rem; }
-    .atributo-grupo label { font-weight: bold; display: block; margin-bottom: 0.25rem; }
-    .opciones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .opciones button {
-      padding: 0.3rem 0.7rem; border: 1px solid #999; border-radius: 4px;
-      background: #fff; cursor: pointer; font-size: 0.85rem;
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      transition: background 0.3s, color 0.3s;
     }
-    .opciones button.activo { background: #333; color: #fff; border-color: #333; }
-    .opciones button:hover:not(.activo) { background: #eee; }
-    .personajes-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .tag {
-      padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.8rem;
-      border: 1px solid #ccc;
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .tag.activo { background: #d4edda; border-color: #28a745; color: #155724; }
-    .tag.descartado { background: #f8d7da; border-color: #dc3545; color: #721c24; text-decoration: line-through; opacity: 0.7; }
-    .mejor-pregunta { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 0.75rem; margin-bottom: 1rem; }
-    .mejor-pregunta h2 { border-bottom-color: #ffc107; }
-    .stats { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
-    .stat { font-size: 0.9rem; }
-    .stat span { font-weight: bold; }
-    button#resetBtn { padding: 0.4rem 1rem; background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
-    button#resetBtn:hover { background: #b02a37; }
-    #loading { font-style: italic; color: #666; font-size: 0.85rem; margin-left: 0.5rem; }
-    #error { color: red; font-size: 0.85rem; }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text .accent { color: var(--accent); }
+    .logo-text .accent2 { color: var(--accent2); }
+
+    .logo-sub {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Toggle tema */
+    .theme-toggle {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+      color: var(--text);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: border-color 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+
+    /* ── Layout principal ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      grid-template-rows: auto 1fr;
+      gap: 0;
+      height: calc(100vh - 53px);
+    }
+
+    /* Panel izquierdo (juego) */
+    .panel-game {
+      overflow-y: auto;
+      padding: 1.25rem;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Panel derecho (terminal) */
+    .panel-terminal {
+      background: var(--terminal-bg);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      overflow: hidden;
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid #1e1e28;
+      background: #0f0f14;
+      flex-shrink: 0;
+    }
+
+    .terminal-dots { display: flex; gap: 6px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .terminal-title {
+      font-size: 0.7rem;
+      color: #555568;
+      margin-left: 0.25rem;
+      letter-spacing: 1px;
+    }
+
+    .terminal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      line-height: 1.7;
+    }
+
+    .terminal-body::-webkit-scrollbar { width: 4px; }
+    .terminal-body::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
+
+    /* Líneas de terminal */
+    .tline { display: block; white-space: pre-wrap; word-break: break-all; }
+    .tline-prompt { color: var(--terminal-prompt); }
+    .tline-cmd    { color: var(--terminal-cmd); }
+    .tline-key    { color: var(--terminal-key); }
+    .tline-val    { color: var(--terminal-val); }
+    .tline-muted  { color: var(--terminal-comment); }
+    .tline-out    { color: #c0c0d0; }
+    .tline-error  { color: var(--red); }
+    .tline-sep    { color: #1e1e28; }
+
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Secciones del juego ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+    }
+
+    /* Mejor pregunta */
+    .hint-card {
+      background: var(--bg2);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hint-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(230,57,70,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hint-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 0.4rem;
+    }
+
+    .hint-text {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .hint-text .kw { color: var(--accent2); font-family: var(--font-mono); }
+    .hint-text .val { color: var(--accent); font-family: var(--font-mono); }
+
+    .hint-score {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Filtros */
+    .filtro-grupo { margin-bottom: 0.85rem; }
+
+    .filtro-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    .opciones { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .opt-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg3);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .opt-btn:hover { border-color: var(--accent2); color: var(--text); }
+
+    .opt-btn.activo {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(230, 57, 70, 0.1);
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .stat-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .stat-dot.green { background: var(--green); }
+    .stat-dot.red   { background: var(--red); }
+
+    .stat-num { font-weight: 700; font-size: 1rem; }
+
+    /* Personajes grid */
+    .chars-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+    .char-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      border: 1px solid;
+      transition: opacity 0.2s;
+    }
+
+    .char-tag.activo {
+      background: var(--green-dim);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .char-tag.descartado {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: var(--red);
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+
+    /* Reset btn */
+    .reset-btn {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* Error */
+    #error-msg {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--red);
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--red);
+      border-radius: 4px;
+      background: var(--red-dim);
+      display: none;
+    }
+    #error-msg.visible { display: block; }
+
+    /* Spinner inline */
+    .spinner {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar general */
+    .panel-game::-webkit-scrollbar { width: 4px; }
+    .panel-game::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+      .panel-terminal { height: 260px; border-top: 1px solid var(--border); border-right: none; }
+    }
   </style>
 </head>
 <body>
-<div id="app">
-  <h1>WHOlog 🦸</h1>
-  <p style="margin-bottom:1rem;color:#555">Filtra por atributos y descubre qué superhéroe pensé.</p>
 
-  <div id="error"></div>
-
-  <!-- Mejor pregunta sugerida -->
-  <div class="mejor-pregunta" id="seccion-mejor">
-    <h2>Mejor pregunta sugerida por Prolog <span id="loading"></span></h2>
-    <div id="mejor-contenido">Cargando...</div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="seccion">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-      <h2 style="border:none;padding:0;margin:0">Filtros activos</h2>
-      <button id="resetBtn">Reiniciar</button>
+<header>
+  <div class="logo">
+    <div>
+      <div class="logo-text"><span class="accent">WHO</span><span class="accent2">log</span></div>
+      <div class="logo-sub">prolog · heroes · inference</div>
     </div>
-    <div id="filtros-container">Cargando atributos...</div>
+  </div>
+  <div class="header-right">
+    <span class="badge" id="status-badge">⬤ offline</span>
+    <button class="theme-toggle" id="themeBtn" title="Cambiar tema">
+      <span id="themeIcon">☀</span> <span id="themeLabel">Claro</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Panel juego ── -->
+  <div class="panel-game">
+
+    <div id="error-msg"></div>
+
+    <!-- Hint -->
+    <div class="hint-card" id="hint-card">
+      <div class="hint-label">▶ mejor consulta prolog</div>
+      <div class="hint-text" id="hint-text">Cargando...</div>
+      <div class="hint-score" id="hint-score"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-dot green"></span>
+        <span class="stat-num" id="cnt-activos">—</span>
+        <span style="color:var(--text-muted)">activos</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-dot red"></span>
+        <span class="stat-num" id="cnt-descartados">—</span>
+        <span style="color:var(--text-muted)">descartados</span>
+      </div>
+      <span id="spinner" class="spinner" style="display:none"></span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">// filtros</span>
+        <button class="reset-btn" id="resetBtn">↺ reset</button>
+      </div>
+      <div id="filtros-container">Cargando atributos...</div>
+    </div>
+
+    <!-- Personajes activos -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" style="color:var(--green)">▶ en juego</span>
+      </div>
+      <div class="chars-grid" id="lista-activos"></div>
+    </div>
+
+    <!-- Personajes descartados -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" style="color:var(--red)">✕ descartados</span>
+      </div>
+      <div class="chars-grid" id="lista-descartados"></div>
+    </div>
+
   </div>
 
-  <!-- Estadísticas -->
-  <div class="stats">
-    <div class="stat">Activos: <span id="cnt-activos">-</span></div>
-    <div class="stat">Descartados: <span id="cnt-descartados">-</span></div>
+  <!-- ── Panel terminal Prolog ── -->
+  <div class="panel-terminal">
+    <div class="terminal-header">
+      <div class="terminal-dots">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <span class="terminal-title">SWI-PROLOG — wholog/base.pl</span>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <span class="tline tline-muted">% WHOlog inference engine loaded</span>
+      <span class="tline tline-muted">% 28 facts · 10 attributes · scoring active</span>
+      <span class="tline tline-sep">────────────────────────────────</span>
+      <span class="tline">&nbsp;</span>
+    </div>
   </div>
 
-  <!-- Personajes activos -->
-  <div class="seccion">
-    <h2>Personajes que siguen en juego</h2>
-    <div class="personajes-grid" id="lista-activos"></div>
-  </div>
-
-  <!-- Personajes descartados -->
-  <div class="seccion">
-    <h2>Personajes descartados</h2>
-    <div class="personajes-grid" id="lista-descartados"></div>
-  </div>
 </div>
 
 <script>
 const API = 'http://localhost:3001';
-
-// Estado de la aplicación
 let atributosDisponibles = [];
-let restricciones = {}; // { "universo:dc": true, ... }
+let restricciones = {};
+let queryCount = 0;
 
-// ----------------------------------------------------------
-// Fetch helpers
-// ----------------------------------------------------------
+// ── Tema ──────────────────────────────────────────────────
+const themeBtn = document.getElementById('themeBtn');
+const themeIcon = document.getElementById('themeIcon');
+const themeLabel = document.getElementById('themeLabel');
+
+function setTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  themeIcon.textContent = dark ? '☀' : '☾';
+  themeLabel.textContent = dark ? 'Claro' : 'Oscuro';
+}
+
+themeBtn.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  setTheme(!isDark);
+});
+
+// ── Terminal logger ───────────────────────────────────────
+const termBody = document.getElementById('terminal-body');
+
+function termLine(content, cls = 'tline-out') {
+  const span = document.createElement('span');
+  span.className = `tline ${cls}`;
+  span.innerHTML = content;
+  termBody.appendChild(span);
+  termBody.scrollTop = termBody.scrollHeight;
+}
+
+function termSep() {
+  termLine('────────────────────────────────', 'tline-sep');
+}
+
+function termQuery(goal, restricciones) {
+  queryCount++;
+  termSep();
+  termLine(`<span class="tline-muted">% query #${queryCount} · ${new Date().toLocaleTimeString()}</span>`);
+  termLine(`<span class="tline-prompt">?- </span><span class="tline-cmd">${escHtml(goal)}</span>`);
+
+  if (restricciones && restricciones.length > 0) {
+    termLine(`<span class="tline-muted">%  restricciones activas:</span>`);
+    restricciones.forEach(r => {
+      termLine(`<span class="tline-muted">%    </span><span class="tline-key">${r.atributo}</span><span class="tline-muted"> = </span><span class="tline-val">${r.valor}</span>`);
+    });
+  } else {
+    termLine(`<span class="tline-muted">%  sin restricciones (estado inicial)</span>`);
+  }
+}
+
+function termResult(estado) {
+  const mp = estado.mejor_pregunta;
+  termLine(`<span class="tline-muted">%  resultado:</span>`);
+  termLine(`<span class="tline-key">  total_activos</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_activos}</span>`);
+  termLine(`<span class="tline-key">  total_descartados</span><span class="tline-muted"> = </span><span class="tline-val">${estado.total_descartados}</span>`);
+
+  if (mp && mp.atributo !== 'null') {
+    termLine(`<span class="tline-key">  mejor_pregunta</span>`);
+    termLine(`<span class="tline-muted">    atributo = </span><span class="tline-val">${mp.atributo}</span>`);
+    termLine(`<span class="tline-muted">    valor    = </span><span class="tline-val">${mp.valor}</span>`);
+    termLine(`<span class="tline-muted">    puntaje  = </span><span class="tline-val">${parseFloat(mp.puntaje).toFixed(2)}</span>`);
+  } else {
+    termLine(`<span class="tline-muted">    mejor_pregunta = </span><span class="tline-val">null</span>`);
+  }
+  termLine(`<span class="tline-prompt">true.</span>`);
+}
+
+function termError(msg) {
+  termLine(`<span class="tline-error">ERROR: ${escHtml(msg)}</span>`);
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ── API ───────────────────────────────────────────────────
 async function fetchAtributos() {
   const r = await fetch(`${API}/atributos`);
   const d = await r.json();
   return d.atributos;
 }
 
-async function fetchEstado(restriccionesArray) {
+async function fetchEstado(rest) {
   const r = await fetch(`${API}/estado`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ restricciones: restriccionesArray }),
+    body: JSON.stringify({ restricciones: rest }),
   });
   return r.json();
 }
 
-// ----------------------------------------------------------
-// Construye la lista de restricciones activas
-// ----------------------------------------------------------
 function getRestriccionesArray() {
   return Object.entries(restricciones)
-    .filter(([, activo]) => activo)
+    .filter(([, v]) => v)
     .map(([key]) => {
-      const [atributo, valor] = key.split(':');
-      return { atributo, valor };
+      const idx = key.indexOf(':');
+      return { atributo: key.slice(0, idx), valor: key.slice(idx + 1) };
     });
 }
 
-// ----------------------------------------------------------
-// Renderiza los filtros
-// ----------------------------------------------------------
+// ── Render filtros ────────────────────────────────────────
 function renderFiltros() {
   const container = document.getElementById('filtros-container');
   container.innerHTML = '';
-
-  atributosDisponibles.forEach(({ nombre, tipo, opciones }) => {
+  atributosDisponibles.forEach(({ nombre, opciones }) => {
     const grupo = document.createElement('div');
-    grupo.className = 'atributo-grupo';
+    grupo.className = 'filtro-grupo';
+    const lbl = document.createElement('span');
+    lbl.className = 'filtro-label';
+    lbl.textContent = nombre.replace(/_/g, ' ');
+    grupo.appendChild(lbl);
 
-    const label = document.createElement('label');
-    label.textContent = capitalize(nombre);
-    grupo.appendChild(label);
-
-    const opcionesDiv = document.createElement('div');
-    opcionesDiv.className = 'opciones';
-
-    opciones.forEach(opcion => {
-      const key = `${nombre}:${opcion}`;
+    const wrap = document.createElement('div');
+    wrap.className = 'opciones';
+    opciones.forEach(op => {
+      const key = `${nombre}:${op}`;
       const btn = document.createElement('button');
-      btn.textContent = opcion === 'true' ? 'Sí' : opcion === 'false' ? 'No' : capitalize(opcion);
+      btn.className = 'opt-btn' + (restricciones[key] ? ' activo' : '');
+      btn.textContent = op === 'true' ? 'sí' : op === 'false' ? 'no' : op.replace(/_/g, ' ');
       btn.dataset.key = key;
-      if (restricciones[key]) btn.classList.add('activo');
-
-      btn.addEventListener('click', () => toggleRestriccion(nombre, opcion, opciones, btn));
-      opcionesDiv.appendChild(btn);
+      btn.addEventListener('click', () => toggleFiltro(nombre, op, opciones, btn));
+      wrap.appendChild(btn);
     });
-
-    grupo.appendChild(opcionesDiv);
+    grupo.appendChild(wrap);
     container.appendChild(grupo);
   });
 }
 
-// ----------------------------------------------------------
-// Toggle de una restricción
-// Para atributos enum, solo una opción activa a la vez por atributo.
-// Para booleanos, igual.
-// ----------------------------------------------------------
-function toggleRestriccion(atributo, valor, todasOpciones, btn) {
-  const key = `${atributo}:${valor}`;
-
+function toggleFiltro(attr, val, todas, btn) {
+  const key = `${attr}:${val}`;
   if (restricciones[key]) {
-    // Desactivar
     delete restricciones[key];
     btn.classList.remove('activo');
   } else {
-    // Desactivar las otras opciones del mismo atributo
-    todasOpciones.forEach(o => { delete restricciones[`${atributo}:${o}`]; });
-    // Activar esta
+    todas.forEach(o => delete restricciones[`${attr}:${o}`]);
     restricciones[key] = true;
-
-    // Actualizar clases visualmente
-    document.querySelectorAll(`[data-key^="${atributo}:"]`).forEach(b => b.classList.remove('activo'));
+    document.querySelectorAll(`[data-key^="${attr}:"]`).forEach(b => b.classList.remove('activo'));
     btn.classList.add('activo');
   }
-
   actualizarEstado();
 }
 
-// ----------------------------------------------------------
-// Actualiza el estado desde la API
-// ----------------------------------------------------------
+// ── Actualizar estado ─────────────────────────────────────
 async function actualizarEstado() {
-  const loading = document.getElementById('loading');
-  const errorDiv = document.getElementById('error');
-  loading.textContent = '(consultando Prolog...)';
-  errorDiv.textContent = '';
+  const spinner = document.getElementById('spinner');
+  const errorMsg = document.getElementById('error-msg');
+  spinner.style.display = 'inline-block';
+  errorMsg.classList.remove('visible');
+
+  const rest = getRestriccionesArray();
+
+  // Log en terminal
+  termQuery('estado_json(Restricciones)', rest);
 
   try {
-    const rest = getRestriccionesArray();
     const estado = await fetchEstado(rest);
+
+    if (estado.error) throw new Error(estado.error);
+
+    // Terminal resultado
+    termResult(estado);
 
     // Personajes
     renderPersonajes(estado.activos || [], estado.descartados || []);
@@ -196,67 +683,64 @@ async function actualizarEstado() {
     document.getElementById('cnt-activos').textContent = estado.total_activos ?? 0;
     document.getElementById('cnt-descartados').textContent = estado.total_descartados ?? 0;
 
-    // Mejor pregunta
+    // Hint
     const mp = estado.mejor_pregunta;
-    const contenido = document.getElementById('mejor-contenido');
+    const hintText = document.getElementById('hint-text');
+    const hintScore = document.getElementById('hint-score');
     if (mp && mp.atributo !== 'null') {
-      const valorDisplay = mp.valor === 'true' ? 'Sí' : mp.valor === 'false' ? 'No' : capitalize(mp.valor);
-      contenido.innerHTML = `¿<strong>${capitalize(mp.atributo)}</strong> = <strong>${valorDisplay}</strong>? &nbsp;<small style="color:#666">(puntaje: ${parseFloat(mp.puntaje).toFixed(2)})</small>`;
+      const valDisplay = mp.valor === 'true' ? 'sí' : mp.valor === 'false' ? 'no' : mp.valor.replace(/_/g, ' ');
+      hintText.innerHTML = `¿<span class="kw">${mp.atributo.replace(/_/g, ' ')}</span> = <span class="val">${valDisplay}</span>?`;
+      hintScore.textContent = `puntaje: ${parseFloat(mp.puntaje).toFixed(2)} | descarta más personajes`;
     } else {
-      contenido.textContent = 'No hay más preguntas útiles.';
+      hintText.textContent = 'No quedan preguntas útiles.';
+      hintScore.textContent = '';
     }
 
+    // Badge online
+    document.getElementById('status-badge').textContent = '⬤ online';
+    document.getElementById('status-badge').style.color = 'var(--green)';
+
   } catch (e) {
-    document.getElementById('error').textContent = `Error al contactar la API: ${e.message}. ¿Está corriendo server.js?`;
+    termError(e.message);
+    errorMsg.textContent = `API error: ${e.message} — ¿Está corriendo node server.js?`;
+    errorMsg.classList.add('visible');
+    document.getElementById('status-badge').textContent = '⬤ offline';
+    document.getElementById('status-badge').style.color = 'var(--red)';
   } finally {
-    loading.textContent = '';
+    spinner.style.display = 'none';
   }
 }
 
-// ----------------------------------------------------------
-// Renderiza las listas de personajes
-// ----------------------------------------------------------
+// ── Render personajes ─────────────────────────────────────
 function renderPersonajes(activos, descartados) {
-  const listaActivos = document.getElementById('lista-activos');
-  const listaDescartados = document.getElementById('lista-descartados');
-
-  listaActivos.innerHTML = activos.map(n =>
-    `<span class="tag activo">${n}</span>`
-  ).join('');
-
-  listaDescartados.innerHTML = descartados.map(n =>
-    `<span class="tag descartado">${n}</span>`
-  ).join('');
+  document.getElementById('lista-activos').innerHTML =
+    activos.map(n => `<span class="char-tag activo">${n}</span>`).join('');
+  document.getElementById('lista-descartados').innerHTML =
+    descartados.map(n => `<span class="char-tag descartado">${n}</span>`).join('');
 }
 
-// ----------------------------------------------------------
-// Reset
-// ----------------------------------------------------------
+// ── Reset ─────────────────────────────────────────────────
 document.getElementById('resetBtn').addEventListener('click', () => {
   restricciones = {};
   renderFiltros();
+  termLine(`<span class="tline-muted">% ↺ sesión reiniciada</span>`);
   actualizarEstado();
 });
 
-// ----------------------------------------------------------
-// Helpers
-// ----------------------------------------------------------
-function capitalize(s) {
-  if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
-}
-
-// ----------------------------------------------------------
-// Init
-// ----------------------------------------------------------
+// ── Init ──────────────────────────────────────────────────
 async function init() {
-  const errorDiv = document.getElementById('error');
+  const errorMsg = document.getElementById('error-msg');
   try {
+    termLine(`<span class="tline-prompt">?- </span><span class="tline-cmd">use_module(library(lists)), consult('base.pl').</span>`);
     atributosDisponibles = await fetchAtributos();
+    termLine(`<span class="tline-val">true.</span>`);
+    termLine(`<span class="tline-muted">% atributos cargados: ${atributosDisponibles.map(a => a.nombre).join(', ')}</span>`);
     renderFiltros();
     await actualizarEstado();
   } catch (e) {
-    errorDiv.textContent = `No se pudo conectar con la API (${e.message}). Asegúrate de correr: node server.js`;
+    termError(e.message);
+    errorMsg.textContent = `No se pudo conectar con la API — ejecuta: node server.js`;
+    errorMsg.classList.add('visible');
   }
 }
 

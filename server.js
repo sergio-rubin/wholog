@@ -144,7 +144,7 @@ const server = http.createServer(async (req, res) => {
 
   // ---- POST /estado ----
   // Body: { restricciones: [{atributo, valor}] }
-  // Devuelve: activos, descartados, mejor_pregunta
+  // Devuelve: activos, descartados, mejor_pregunta, prolog_query
   if (req.method === 'POST' && pathname === '/estado') {
     try {
       const body = await readBody(req);
@@ -152,6 +152,8 @@ const server = http.createServer(async (req, res) => {
       const goal = `estado_json(${prologList})`;
       const raw = await runProlog(goal);
       const resultado = parsePrologJson(raw);
+      resultado.prolog_query = `?- estado_json(${prologList}).`;
+      resultado.prolog_raw = raw;
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(resultado));
     } catch (e) {
